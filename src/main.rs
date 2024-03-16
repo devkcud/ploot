@@ -3,5 +3,8 @@ use ploot::server;
 fn main() {
     let server = server::Listener::new();
 
-    server.listen(":8000").unwrap()
+    match server.listen(":1234") {
+        Ok(_) => (),
+        Err(e) => println!("{}", e),
+    }
 }

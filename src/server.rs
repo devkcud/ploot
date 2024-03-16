@@ -3,6 +3,8 @@ use std::{
     net::TcpListener,
 };
 
+const DEFAULT_HOSTNAME: &str = "127.0.0.1";
+
 pub struct Listener;
 
 impl Listener {
@@ -10,29 +12,18 @@ impl Listener {
         Self {}
     }
 
-    // TODO: Refactor
-    // TODO: Handle errors
-    pub fn listen(&self, port: &str) -> Result<()> {
-        if !port.contains(":") {
-            return Err(Error::new(
-                ErrorKind::InvalidInput,
-                "Must include ':'\nExample: `127.0.0.1:3000` or `:3000`",
-            ));
-        }
-
-        let split = port.split(":").collect::<Vec<&str>>();
-
-        let hostname = match *split.get(0).unwrap() {
-            "" => "localhost",
-            _ => split.get(0).unwrap(),
+    pub fn listen(&self, host: &str) -> Result<()> {
+        let (ip, port) = match Self::parse_host(host) {
+            Ok(o) => o,
+            Err(e) => {
+                return Err(e);
+            }
         };
 
-        // FIXME: Passible string '3000:' -> Which is not valid
-        let listener =
-            TcpListener::bind(format!("{}:{}", hostname, split.get(1).unwrap())).unwrap();
+        let listener = TcpListener::bind(format!("{ip}:{port}"))?;
 
         println!(
-            "Listening at {}",
+            "Listening at http://{}",
             listener.local_addr().unwrap().to_string()
         );
 
@@ -41,5 +32,28 @@ impl Listener {
         }
 
         Ok(())
+    }
+
+    fn parse_host(host: &str) -> Result<(String, u16)> {
+        let parts: Vec<&str> = host.split(':').collect();
+
+        if parts.len() > 2 {
+            return Err(Error::new(ErrorKind::InvalidData, "Invalid host format"));
+        }
+
+        let ip = if parts[0].is_empty() {
+            DEFAULT_HOSTNAME.to_string()
+        } else {
+            parts[0].to_string()
+        };
+
+        let port: u16 = match parts[parts.len() - 1].parse() {
+            Ok(o) => o,
+            Err(_) => {
+                return Err(Error::new(ErrorKind::InvalidData, "Invalid port number"));
+            }
+        };
+
+        Ok((ip, port))
     }
 }
