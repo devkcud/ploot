@@ -1,6 +1,7 @@
+use crate::response::ReponseConstructor;
 use std::{
-    io::{Error, ErrorKind, Result},
-    net::TcpListener,
+    io::{Error, ErrorKind, Result, Write},
+    net::{TcpListener, TcpStream},
 };
 
 const DEFAULT_HOSTNAME: &str = "127.0.0.1";
@@ -9,7 +10,7 @@ pub struct Listener;
 
 impl Listener {
     pub fn new() -> Self {
-        Self {}
+        Self
     }
 
     pub fn listen(&self, host: &str) -> Result<()> {
@@ -28,10 +29,21 @@ impl Listener {
         );
 
         for stream in listener.incoming() {
-            println!("{:#?}", stream);
+            match stream {
+                Ok(o) => Self::handle_request(o),
+                Err(e) => {
+                    return Err(e);
+                }
+            }
         }
 
         Ok(())
+    }
+
+    fn handle_request(mut stream: TcpStream) {
+        stream
+            .write_all(&ReponseConstructor::new().set_content("Hi").build())
+            .unwrap();
     }
 
     fn parse_host(host: &str) -> Result<(String, u16)> {
