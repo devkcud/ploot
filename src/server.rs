@@ -7,7 +7,7 @@ use std::{
 
 const DEFAULT_HOSTNAME: &str = "127.0.0.1";
 
-type MethodHandle = fn(stream: TcpStream) -> Result<()>;
+type MethodHandle = fn() -> ResponseConstructor;
 
 pub struct Listener {
     routes: HashMap<&'static str, Route>,
@@ -128,7 +128,9 @@ impl Listener {
             return;
         }
 
-        self.routes[path].methods[method](stream).unwrap();
+        stream
+            .write_all(&self.routes[path].methods[method]().build())
+            .unwrap();
     }
 
     fn parse_host(host: &str) -> Result<(String, u16)> {
