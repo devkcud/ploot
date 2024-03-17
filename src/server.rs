@@ -13,12 +13,14 @@ const DEFAULT_HOSTNAME: &str = "127.0.0.1";
 type MethodHandle = fn(RequestConstructor) -> ResponseConstructor;
 
 pub struct Listener {
-    routes: HashMap<&'static str, Route>,
+    group: String,
+    routes: HashMap<String, Route>,
 }
 
 impl Listener {
     pub fn new() -> Self {
         Self {
+            group: String::new(),
             routes: HashMap::new(),
         }
     }
@@ -52,39 +54,48 @@ impl Listener {
         Ok(())
     }
 
+    pub fn set_group(&mut self, group: &str) {
+        self.group = String::from(group);
+    }
+
+    pub fn clear_group(&mut self) {
+        self.group = String::new();
+    }
+
     #[allow(non_snake_case)]
-    pub fn GET(&mut self, path: &'static str, handle: MethodHandle) -> () {
+    pub fn GET(&mut self, path: &str, handle: MethodHandle) -> () {
         self.route("GET", path, handle);
     }
 
     #[allow(non_snake_case)]
-    pub fn POST(&mut self, path: &'static str, handle: MethodHandle) -> () {
+    pub fn POST(&mut self, path: &str, handle: MethodHandle) -> () {
         self.route("POST", path, handle);
     }
 
     #[allow(non_snake_case)]
-    pub fn PUT(&mut self, path: &'static str, handle: MethodHandle) -> () {
+    pub fn PUT(&mut self, path: &str, handle: MethodHandle) -> () {
         self.route("PUT", path, handle);
     }
 
     #[allow(non_snake_case)]
-    pub fn PATCH(&mut self, path: &'static str, handle: MethodHandle) -> () {
+    pub fn PATCH(&mut self, path: &str, handle: MethodHandle) -> () {
         self.route("PATCH", path, handle);
     }
 
     #[allow(non_snake_case)]
-    pub fn DELETE(&mut self, path: &'static str, handle: MethodHandle) -> () {
+    pub fn DELETE(&mut self, path: &str, handle: MethodHandle) -> () {
         self.route("DELETE", path, handle);
     }
 
-    fn route(&mut self, method: &'static str, path: &'static str, handle: MethodHandle) -> () {
+    fn route(&mut self, method: &str, path: &str, handle: MethodHandle) -> () {
         self.routes
-            .entry(path)
+            .entry(format!("{}{}", self.group, path))
             .or_insert(Route {
+                group: self.group.clone(),
                 methods: HashMap::new(),
             })
             .methods
-            .insert(method, handle);
+            .insert(String::from(method), handle);
     }
 
     fn handle_request(&self, mut stream: TcpStream) -> () {
@@ -109,9 +120,8 @@ impl Listener {
             if let Some(handler) = route.methods.get(method) {
                 let mut request = RequestConstructor::new();
 
-                for (key, value) in params {
-                    request.add_url_param(&key, &value);
-                }
+                request.url_params = params;
+                request.group = String::from(route.group.trim_matches('/'));
 
                 let response = handler(request);
 
@@ -163,10 +173,7 @@ impl Listener {
         Ok((ip, port))
     }
 
-    fn parse_url_params(
-        path: &str,
-        routes: &HashMap<&'static str, Route>,
-    ) -> Option<(Route, URLParams)> {
+    fn parse_url_params(path: &str, routes: &HashMap<String, Route>) -> Option<(Route, URLParams)> {
         let path_segments: Vec<&str> = path.trim_matches('/').split('/').collect();
 
         for (route_path, route) in routes {
@@ -200,5 +207,6 @@ impl Listener {
 
 #[derive(Debug, Clone)]
 struct Route {
-    methods: HashMap<&'static str, MethodHandle>,
+    group: String,
+    methods: HashMap<String, MethodHandle>,
 }
