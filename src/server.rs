@@ -1,4 +1,7 @@
-use crate::response::ResponseConstructor;
+use crate::{
+    request::{RequestConstructor, URLParams},
+    response::ResponseConstructor,
+};
 use std::{
     collections::HashMap,
     io::{BufRead, BufReader, Error, ErrorKind, Result, Write},
@@ -7,7 +10,7 @@ use std::{
 
 const DEFAULT_HOSTNAME: &str = "127.0.0.1";
 
-type MethodHandle = fn() -> ResponseConstructor;
+type MethodHandle = fn(RequestConstructor) -> ResponseConstructor;
 
 pub struct Listener {
     routes: HashMap<&'static str, Route>,
@@ -102,21 +105,20 @@ impl Listener {
         let path = *status_line.get(1).unwrap();
         let method = *status_line.get(0).unwrap();
 
-        if self.routes.get(path).is_none() {
-            stream
-                .write_all(
-                    &ResponseConstructor::new()
-                        .set_status("404 Not Found")
-                        .set_content_type("application/json")
-                        .set_content(r#"{ "error": "Not Found" }"#)
-                        .build(),
-                )
-                .unwrap();
-            return;
-        }
+        if let Some((route, params)) = Self::parse_url_params(path, &self.routes) {
+            if let Some(handler) = route.methods.get(method) {
+                let mut request = RequestConstructor::new();
 
-        if self.routes[path].methods.get(method).is_none() {
-            stream
+                for (key, value) in params {
+                    request.add_url_param(&key, &value);
+                }
+
+                let response = handler(request);
+
+                return stream.write_all(&response.build()).unwrap();
+            }
+
+            return stream
                 .write_all(
                     &ResponseConstructor::new()
                         .set_status("405 Method Not Allowed")
@@ -125,11 +127,16 @@ impl Listener {
                         .build(),
                 )
                 .unwrap();
-            return;
         }
 
         stream
-            .write_all(&self.routes[path].methods[method]().build())
+            .write_all(
+                &ResponseConstructor::new()
+                    .set_status("404 Not Found")
+                    .set_content_type("application/json")
+                    .set_content(r#"{ "error": "Not Found" }"#)
+                    .build(),
+            )
             .unwrap();
     }
 
@@ -155,8 +162,43 @@ impl Listener {
 
         Ok((ip, port))
     }
+
+    fn parse_url_params(
+        path: &str,
+        routes: &HashMap<&'static str, Route>,
+    ) -> Option<(Route, URLParams)> {
+        let path_segments: Vec<&str> = path.trim_matches('/').split('/').collect();
+
+        for (route_path, route) in routes {
+            let route_segments: Vec<&str> = route_path.trim_matches('/').split('/').collect();
+
+            if path_segments.len() != route_segments.len() {
+                continue;
+            }
+
+            let mut params = HashMap::new();
+            let mut matched = true;
+
+            for (route_part, path_part) in route_segments.iter().zip(path_segments.iter()) {
+                if route_part.starts_with('{') && route_part.ends_with('}') {
+                    let key = &route_part[1..route_part.len() - 1];
+                    params.insert(key.to_string(), path_part.to_string());
+                } else if route_part != path_part {
+                    matched = false;
+                    break;
+                }
+            }
+
+            if matched {
+                return Some((route.clone(), params));
+            }
+        }
+
+        None
+    }
 }
 
+#[derive(Debug, Clone)]
 struct Route {
     methods: HashMap<&'static str, MethodHandle>,
 }
