@@ -13,14 +13,14 @@ const DEFAULT_HOSTNAME: &str = "127.0.0.1";
 type MethodHandle = fn(RequestConstructor) -> ResponseConstructor;
 
 pub struct Listener {
-    group: String,
+    pub group: &'static str,
     routes: HashMap<String, Route>,
 }
 
 impl Listener {
     pub fn new() -> Self {
         Self {
-            group: String::new(),
+            group: "",
             routes: HashMap::new(),
         }
     }
@@ -54,14 +54,6 @@ impl Listener {
         Ok(())
     }
 
-    pub fn set_group(&mut self, group: &str) {
-        self.group = String::from(group);
-    }
-
-    pub fn clear_group(&mut self) {
-        self.group = String::new();
-    }
-
     #[allow(non_snake_case)]
     pub fn GET(&mut self, path: &str, handle: MethodHandle) -> () {
         self.route("GET", path, handle);
@@ -91,7 +83,7 @@ impl Listener {
         self.routes
             .entry(format!("{}{}", self.group, path))
             .or_insert(Route {
-                group: self.group.clone(),
+                group: String::from(self.group),
                 methods: HashMap::new(),
             })
             .methods

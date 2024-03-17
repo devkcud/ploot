@@ -14,9 +14,8 @@ fn get_user(request: RequestConstructor) -> ResponseConstructor {
 fn main() {
     let mut server = server::Listener::new();
 
-    server.set_group("/user");
+    server.group = "/user";
     server.GET("/{name}", get_user);
-    server.clear_group();
 
     match server.listen(":1234") {
         Ok(_) => (),
