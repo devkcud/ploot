@@ -1,4 +1,4 @@
-use crate::response::ReponseConstructor;
+use crate::response::ResponseConstructor;
 use std::{
     collections::HashMap,
     io::{BufRead, BufReader, Error, ErrorKind, Result, Write},
@@ -105,7 +105,7 @@ impl Listener {
         if self.routes.get(path).is_none() {
             stream
                 .write_all(
-                    &ReponseConstructor::new()
+                    &ResponseConstructor::new()
                         .set_status("404 Not Found")
                         .set_content_type("application/json")
                         .set_content(r#"{ "error": "Not Found" }"#)
@@ -118,7 +118,7 @@ impl Listener {
         if self.routes[path].methods.get(method).is_none() {
             stream
                 .write_all(
-                    &ReponseConstructor::new()
+                    &ResponseConstructor::new()
                         .set_status("405 Method Not Allowed")
                         .set_content_type("application/json")
                         .set_content(r#"{ "error": "Method Not Allowed" }"#)

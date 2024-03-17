@@ -1,11 +1,11 @@
-use ploot::{response::ReponseConstructor, server};
+use ploot::{response::ResponseConstructor, server};
 use std::{
     io::{Result, Write},
     net::TcpStream,
 };
 
 fn home(mut stream: TcpStream) -> Result<()> {
-    stream.write_all(&ReponseConstructor::new().set_content("Hi").build())
+    stream.write_all(&ResponseConstructor::new().set_content("Hi").build())
 }
 
 fn main() {

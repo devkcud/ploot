@@ -1,10 +1,10 @@
-pub struct ReponseConstructor {
+pub struct ResponseConstructor {
     status: String,
     content_type: String,
     content: String,
 }
 
-impl ReponseConstructor {
+impl ResponseConstructor {
     pub fn new() -> Self {
         Self {
             status: String::from("200 OK"),
