@@ -5,7 +5,13 @@
 > [!IMPORTANT]
 > This project is not meant to be used in production or any other kind of environment. It was created as a POC. Read more bellow.
 
-**Ploot** is a web server project written in Rust, primarily serving as a _[Proof of Concept (POC)](https://en.wikipedia.org/wiki/Proof_of_concept)_ rather than being production-ready. It's designed for experimental purposes and does not currently have plans for extensive development or deployment.
+**Ploot** is a web server project written in Rust, primarily serving as a _[Proof of Concept (POC)](https://en.wikipedia.org/wiki/Proof_of_concept)_ rather than being production-ready. It's designed for experimental purposes ~~and does not currently have plans for extensive development or deployment~~, I will continue to develop it. See moving section below.
+
+## ✈️ Moving
+
+I'm currently in the process of moving some projects/repositories over to my GitLab account, including this one. I plan to do more work there, experimenting with new features and exploring ideas I like and things I don't see (but I want lol) in other frameworks and web servers.
+
+> I've been using GitLab for a while, but I recently switched to GitHub because of a job change. However, I don't work there anymore.
 
 ## 📦️ Features
 
