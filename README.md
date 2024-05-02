@@ -11,6 +11,8 @@
 
 I'm currently in the process of moving some projects/repositories over to my GitLab account, including this one. I plan to do more work there, experimenting with new features and exploring ideas I like and things I don't see (but I want lol) in other frameworks and web servers.
 
+New repo (I will rewrite the entire project): [ploot](https://gitlab.com/patomcio/ploot)
+
 > I've been using GitLab for a while, but I recently switched to GitHub because of a job change. However, I don't work there anymore.
 
 ## 📦️ Features
